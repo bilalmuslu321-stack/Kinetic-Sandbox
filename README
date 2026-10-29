@@ -23,7 +23,7 @@ Export Options: Markdown reports + JSON data export
 INSTALLATION
 Prerequisites: Python 3.10+, pip
 Quick Start:
-git clone https://github.com/YOUR_USERNAME/KineticSandbox.git
+git clone https://github.com/bilalmuslu321-stack/KineticSandbox.git
 cd KineticSandbox
 pip install customtkinter pefile
 pip install tkinterdnd2 (optional, for drag and drop)
@@ -51,10 +51,6 @@ Case 2: 4dindectnet.py (Python ShellLoader)
 VirusTotal (54 engines): 1/54 (Only Huorong)
 Kinetic Sandbox: MALICIOUS (98/100)
 How? Heuristic engine detected shellcode patterns + dynamic API resolution + anti-debug techniques in static content.
-Case 3: KineticAntivirus.exe (Fake AV Dropper)
-VirusTotal (71 engines): 7/71 (Microsoft Wacatac, CrowdStrike)
-Kinetic Sandbox: MALICIOUS (100/100)
-How? PE anomaly detection (overlay + packer + unsigned) + dropper behavior patterns + persistence indicators.
 LANGUAGE SUPPORT
 Currently supported: Türkçe, English
 To add a new language, edit the TEXTS dictionary in kinetic_sandbox.py
