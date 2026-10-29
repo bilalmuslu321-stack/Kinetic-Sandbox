@@ -1,0 +1,85 @@
+KINETIC SANDBOX v2.0
+Advanced Static Malware Analysis & Threat Hunting Platform
+⚠️ DISCLAIMER: This tool is for educational and research purposes only. It performs static analysis only and NEVER executes suspicious files. Always analyze malware in an isolated virtual machine. The author assumes no liability for misuse.
+WHAT IS KINETIC SANDBOX?
+Kinetic Sandbox is a lightweight, offline, multi-language static malware analysis platform designed to detect threats that traditional antivirus engines miss. Unlike signature-based scanners, it uses deep heuristic analysis, deobfuscation engines, and behavioral pattern matching to identify zero-day threats, obfuscated payloads, and stealthy droppers.
+Why Not VirusTotal?
+While VirusTotal relies on 70+ signature-based engines, Kinetic Sandbox:
+Detects obfuscated malware (Base64, Hex, PowerShell EncodedCommand)
+Identifies zero-day threats without signatures
+Works 100% offline — no API keys, no internet required
+Provides behavioral clues from static content
+Maps IOC relationships (C2 servers, dropped files, persistence)
+Real-world result: Detected a Chrome/Firefox stealer with Discord C2 that scored 0/61 on VirusTotal.
+KEY FEATURES
+Deep Static Analysis: PE headers, entropy, sections, imports, TLS callbacks, overlay detection
+Deobfuscation Engine: Base64, Hex, CharCode, PowerShell -EncodedCommand, embedded PE extraction
+Behavior Clues: Command execution, file writes, registry mods, persistence, credential theft patterns
+Relations Mapping: URL/IP co-occurrence, dropped-file targets, C2 channel identification
+Multi-Language UI: Turkish & English (easily extensible to 6+ languages)
+100% Offline: No API dependencies, no cloud uploads, no telemetry
+Heuristic Scoring: Rule-based risk assessment (0-100) with detailed reasoning
+Export Options: Markdown reports + JSON data export
+INSTALLATION
+Prerequisites: Python 3.10+, pip
+Quick Start:
+git clone https://github.com/YOUR_USERNAME/KineticSandbox.git
+cd KineticSandbox
+pip install customtkinter pefile
+pip install tkinterdnd2 (optional, for drag and drop)
+python kinetic_sandbox.py
+Standalone Executable (No Python Required):
+pip install pyinstaller
+pyinstaller --onefile --windowed --icon=icon.ico kinetic_sandbox.py
+Output: dist/kinetic_sandbox.exe
+HOW IT WORKS
+Sample File → String Extractor (ASCII + UTF-16LE) → Deobfuscator (Base64/Hex/PS/CharCode) → IOC Extractor (URL/IP/Domain/Registry/Mutex) → PE Analyzer (Headers/Sections/Imports/APIs) → Behavior Analyzer (Commands/Writes/Persistence) → Relations Analyzer (Co-occurrence/C2/Drops) → Heuristic Scorer (0-100 Risk Assessment) → Output Tabs
+Analysis Tabs Explained:
+SUMMARY: File metadata, hashes, entropy, type identification, risk score with reasons
+BEHAVIOR: Commands, file-write targets, registry mods, persistence, API categories found in static content
+RELATIONS: URLs with parsed hosts, IP/domain co-occurrences, possible dropped files, C2 indicators
+STATIC DATA: Full PE analysis, script indicators, section details, suspicious API imports
+DECODE: All deobfuscated content with source evidence and decoding method
+STRINGS: Interesting strings (ranked), all ASCII strings, Unicode strings
+LOG: Real-time analysis progress log
+DETECTION PROOF
+Case 1: AutoClicker.py (Chrome/Firefox Stealer)
+VirusTotal (61 engines): 0/61 NOT FOUND
+Kinetic Sandbox: MALICIOUS (100/100)
+How? Deobfuscation engine decoded Base64 payload, found discord.com/api/webhooks C2 + Chrome Login Data + Firefox logins.json access patterns.
+Case 2: 4dindectnet.py (Python ShellLoader)
+VirusTotal (54 engines): 1/54 (Only Huorong)
+Kinetic Sandbox: MALICIOUS (98/100)
+How? Heuristic engine detected shellcode patterns + dynamic API resolution + anti-debug techniques in static content.
+Case 3: KineticAntivirus.exe (Fake AV Dropper)
+VirusTotal (71 engines): 7/71 (Microsoft Wacatac, CrowdStrike)
+Kinetic Sandbox: MALICIOUS (100/100)
+How? PE anomaly detection (overlay + packer + unsigned) + dropper behavior patterns + persistence indicators.
+LANGUAGE SUPPORT
+Currently supported: Türkçe, English
+To add a new language, edit the TEXTS dictionary in kinetic_sandbox.py
+SUPPORTED FILE TYPES
+PE Executables: .exe, .dll, .sys, .scr, .com
+Scripts: .bat, .cmd, .ps1, .vbs, .js, .hta, .py, .sh
+Archives/Other: .msi, .jar, .txt
+IMPORTANT LIMITATIONS
+Static Analysis Only: This tool does NOT execute samples. Behavioral clues are inferred from text patterns, not runtime observation.
+Not a Replacement for Dynamic Analysis: Use alongside tools like Any.Run, Hybrid Analysis, or your own VM sandbox.
+False Positives Possible: Heuristic scoring may flag legitimate software with similar patterns (packers, admin tools, etc.).
+File Size Limit: Files larger than 96 MB are partially analyzed (first 96 MB only).
+Obfuscation Limits: Custom/novel obfuscation schemes may evade the deobfuscator.
+CONTRIBUTING
+Contributions are welcome! Areas where help is needed:
+Additional language translations
+New YARA rules integration
+Improved deobfuscation patterns
+Enhanced heuristic scoring weights
+Bug reports and feature requests
+Open an issue or submit a PR!
+LICENSE
+MIT License
+AUTHOR
+Bilo Baba aka Maymun Mamo
+Developer / Reverse Engineering Enthusiast
+Adana, Turkey
+If this tool helped you, consider giving it a Star!
