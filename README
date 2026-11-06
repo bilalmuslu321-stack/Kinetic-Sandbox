@@ -1,81 +1,516 @@
-KINETIC SANDBOX v2.0
-Advanced Static Malware Analysis & Threat Hunting Platform
-⚠️ DISCLAIMER: This tool is for educational and research purposes only. It performs static analysis only and NEVER executes suspicious files. Always analyze malware in an isolated virtual machine. The author assumes no liability for misuse.
-WHAT IS KINETIC SANDBOX?
-Kinetic Sandbox is a lightweight, offline, multi-language static malware analysis platform designed to detect threats that traditional antivirus engines miss. Unlike signature-based scanners, it uses deep heuristic analysis, deobfuscation engines, and behavioral pattern matching to identify zero-day threats, obfuscated payloads, and stealthy droppers.
-Why Not VirusTotal?
-While VirusTotal relies on 70+ signature-based engines, Kinetic Sandbox:
-Detects obfuscated malware (Base64, Hex, PowerShell EncodedCommand)
-Identifies zero-day threats without signatures
-Works 100% offline — no API keys, no internet required
-Provides behavioral clues from static content
-Maps IOC relationships (C2 servers, dropped files, persistence)
-Real-world result: Detected a Chrome/Firefox stealer with Discord C2 that scored 0/61 on VirusTotal.
-KEY FEATURES
-Deep Static Analysis: PE headers, entropy, sections, imports, TLS callbacks, overlay detection
-Deobfuscation Engine: Base64, Hex, CharCode, PowerShell -EncodedCommand, embedded PE extraction
-Behavior Clues: Command execution, file writes, registry mods, persistence, credential theft patterns
-Relations Mapping: URL/IP co-occurrence, dropped-file targets, C2 channel identification
-Multi-Language UI: Turkish & English (easily extensible to 6+ languages)
-100% Offline: No API dependencies, no cloud uploads, no telemetry
-Heuristic Scoring: Rule-based risk assessment (0-100) with detailed reasoning
-Export Options: Markdown reports + JSON data export
-INSTALLATION
-Prerequisites: Python 3.10+, pip
-Quick Start:
-git clone https://github.com/bilalmuslu321-stack/KineticSandbox.git
-cd KineticSandbox
-pip install customtkinter pefile
-pip install tkinterdnd2 (optional, for drag and drop)
+# KineticSandbox v5
+
+**Static malware analysis — evidence-weighted verdicts, without ever running the sample.**
+
+KineticSandbox **never executes** a file and never connects to an address. It only reads
+bytes: headers, the import table, embedded layers, script code and signature data, and
+turns them into a *reasoned* risk score. The GUI ships in Turkish and English.
+
+```
+Version    : v5
+File       : kinetic_sandbox.py (single file, ~24,400 lines)
+Hunting    : 12 modules · 166 rules · 39 persistence locations · 39 credential targets
+Atlas      : 1,429 techniques · 21 artifact families · 110 curated combos
+Security   : 9-stage trust layer · 136 contradiction rules · 106 framework+publisher records
+Test suite : 621 checks (621/621 passing, ~40 s)
+Requires   : customtkinter (required) · pefile, tkinterdnd2 (optional)
+Verdicts   : CLEAN < 25 ≤ SUSPICIOUS < 45 ≤ MALICIOUS
+ATT&CK     : 152 techniques
+```
+
+> ⚠️ Never run a suspicious sample on your real machine. This tool does not launch the
+> sample, but keeping it inside an isolated VM is still the right habit.
+
+🇹🇷 Türkçe sürüm: [`README.md`](README.md)
+
+---
+
+## 1) Installation
+
+```bash
+pip install -r requirements.txt     # customtkinter (required), pefile, tkinterdnd2
+python kinetic_sandbox.py           # open the GUI
+```
+
+Without `pefile`, PE analysis degrades (the app still runs). Without `tkinterdnd2`,
+drag-and-drop is disabled. Python 3.10+ recommended. No other dependencies; network access
+happens **only** for the optional VirusTotal lookup, and only the SHA-256 digest is sent.
+
+---
+
+## 2) Quick start
+
+### GUI
+
+```bash
 python kinetic_sandbox.py
-Standalone Executable (No Python Required):
-pip install pyinstaller
-pyinstaller --onefile --windowed --icon=icon.ico kinetic_sandbox.py
-Output: dist/kinetic_sandbox.exe
-HOW IT WORKS
-Sample File → String Extractor (ASCII + UTF-16LE) → Deobfuscator (Base64/Hex/PS/CharCode) → IOC Extractor (URL/IP/Domain/Registry/Mutex) → PE Analyzer (Headers/Sections/Imports/APIs) → Behavior Analyzer (Commands/Writes/Persistence) → Relations Analyzer (Co-occurrence/C2/Drops) → Heuristic Scorer (0-100 Risk Assessment) → Output Tabs
-Analysis Tabs Explained:
-SUMMARY: File metadata, hashes, entropy, type identification, risk score with reasons
-BEHAVIOR: Commands, file-write targets, registry mods, persistence, API categories found in static content
-RELATIONS: URLs with parsed hosts, IP/domain co-occurrences, possible dropped files, C2 indicators
-STATIC DATA: Full PE analysis, script indicators, section details, suspicious API imports
-DECODE: All deobfuscated content with source evidence and decoding method
-STRINGS: Interesting strings (ranked), all ASCII strings, Unicode strings
-LOG: Real-time analysis progress log
-DETECTION PROOF
-Case 1: AutoClicker.py (Chrome/Firefox Stealer)
-VirusTotal (61 engines): 0/61 NOT FOUND
-Kinetic Sandbox: MALICIOUS (100/100)
-How? Deobfuscation engine decoded Base64 payload, found discord.com/api/webhooks C2 + Chrome Login Data + Firefox logins.json access patterns.
-Case 2: 4dindectnet.py (Python ShellLoader)
-VirusTotal (54 engines): 1/54 (Only Huorong)
-Kinetic Sandbox: MALICIOUS (98/100)
-How? Heuristic engine detected shellcode patterns + dynamic API resolution + anti-debug techniques in static content.
-LANGUAGE SUPPORT
-Currently supported: Türkçe, English
-To add a new language, edit the TEXTS dictionary in kinetic_sandbox.py
-SUPPORTED FILE TYPES
-PE Executables: .exe, .dll, .sys, .scr, .com
-Scripts: .bat, .cmd, .ps1, .vbs, .js, .hta, .py, .sh
-Archives/Other: .msi, .jar, .txt
-IMPORTANT LIMITATIONS
-Static Analysis Only: This tool does NOT execute samples. Behavioral clues are inferred from text patterns, not runtime observation.
-Not a Replacement for Dynamic Analysis: Use alongside tools like Any.Run, Hybrid Analysis, or your own VM sandbox.
-False Positives Possible: Heuristic scoring may flag legitimate software with similar patterns (packers, admin tools, etc.).
-File Size Limit: Files larger than 96 MB are partially analyzed (first 96 MB only).
-Obfuscation Limits: Custom/novel obfuscation schemes may evade the deobfuscator.
-CONTRIBUTING
-Contributions are welcome! Areas where help is needed:
-Additional language translations
-New YARA rules integration
-Improved deobfuscation patterns
-Enhanced heuristic scoring weights
-Bug reports and feature requests
-Open an issue or submit a PR!
-LICENSE
-MIT License
-AUTHOR
-Bilo Baba aka Maymun Mamo
-Developer / Reverse Engineering Enthusiast
-Adana, Turkey
-If this tool helped you, consider giving it a Star!
+```
+
+Drag the file onto the window → **▶ STATİK ANALİZ ET** (run static analysis) → walk the
+tabs → **💾 RAPORU KAYDET** (save report) or **🗎 JSON DIŞA AKTAR** (export JSON).
+
+| Tab | Contents |
+|---|---|
+| 📌 ÖZET / SUMMARY | Verdict, score, reasons, strong evidence, **triage block** (kill-chain stages), signature state, family, ATT&CK summary |
+| ⚙ DAVRANIŞ / BEHAVIOR | Commands, persistence, registry writes, API behaviour |
+| 📡 İLİŞKİLER / RELATIONS | URLs/hosts, IPs, domains, likely dropped files |
+| 📂 DOSYA İŞLEMLERİ / FILE OPS | Files read / written / deleted / executed |
+| 🎯 ATT&CK | MITRE ATT&CK mapping, family matches, container and shellcode findings |
+| 🔬 STATİK VERİ / STATIC | PE headers, sections, import categories, manifest |
+| 🔓 DECODE | Automatic layer decoding + **layer summary**, **text filter**, **save layers** + manual decode panel |
+| 🔤 STRING'LER / STRINGS | ASCII / Unicode string dump |
+| 📋 LOG | Analysis log |
+| ⚙ AYARLAR / SETTINGS | **View/change application settings + update log (upd log)** |
+
+#### SETTINGS tab (v4)
+
+| Section | What it does |
+|---|---|
+| Language | Switches the UI language (TR/EN), applied immediately |
+| VirusTotal | Enter the API key, turn the VT lookup on/off (only SHA-256 is sent) |
+| Verdict thresholds | `CLEAN < 25 ≤ SUSPICIOUS < 45 ≤ MALICIOUS` and the strong-evidence threshold (30 points) shown **read-only** |
+| Limits | Max file size, script characters, search layers, container depth |
+| Hunting modules | Turn each of the 12 modules (atlas included) **on/off**; a disabled module does not run |
+| Configuration | `~/.kineticsandbox.json` path + **Save / Reload / Open file / Export / Reset to defaults** |
+| Update log | Shows `CHANGELOG.md` when present, otherwise the embedded update log; **REFRESH** button |
+
+#### DECODE tab refresh (v4)
+
+- **Layer summary** always at the top: `KATMAN ÖZETİ: 12 katman · Base64: 6, Hex: 3, PS -enc: 2…`
+- **Text filter:** type a word such as `url`, `ip`, `base64` or `powershell` and press
+  **FİLTRELE**; only matching lines remain and the match count appears in the status bar.
+  `Enter` works too.
+- **KATMANLARI KAYDET (save layers):** exports every decoded layer as JSON (or `.txt`).
+
+### Command line
+
+```bash
+python kinetic_sandbox.py --cli sample.exe                    # single file
+python kinetic_sandbox.py --cli samples/ --recursive          # batch scan
+python kinetic_sandbox.py --cli samples/ --json out.json --report out.txt \
+       --min-level malicious --quiet                           # automation
+```
+
+| Option | Description |
+|---|---|
+| `--cli` | Command-line mode instead of the GUI (automatic when a sample argument is given) |
+| `--json PATH` | JSON output (one object for a single file, an array for many) — includes the `hunting` block |
+| `--report PATH` | Human-readable full report (with the THREAT HUNTING section) |
+| `--lang {tr,en}` | Report language |
+| `--recursive` | Recurse into folders |
+| `--max-files N` | Batch scan cap (default 500) |
+| `--min-level LEVEL` | Only show `clean` / `suspicious` / `malicious` and above |
+| `--quiet` / `--verbose` / `--no-color` | Quiet summary / reasons + HUNT and ATLAS dump / no ANSI colour |
+| `--trust-profile NAME` | `auto` (default) / `triage` (no demotion) / `source` / `forensics` |
+| `--trust-policy PATH` | Trust policy JSON file |
+| `--audit-log` | Write verdicts to the hash-chained audit trail |
+| `--trust-doctor` | Trust-layer diagnosis: benchmark + table health + calibration (no file needed) |
+
+Each line now also carries hunting data, and `--verbose` adds the atlas line:
+
+```
+MALICIOUS  100/100  a.ps1   71 B  aile=-  attack=3  hunt=32.1  asama=3
+    ATLAS eslesme=12/1429 puan=80.0 zincir=execution → persistence → evasion
+```
+
+**Exit codes:** `0` no malware · `1` usage/IO error · `2` at least one MALICIOUS ·
+`3` suspicious only. (Designed for CI and batch scripts.)
+
+---
+
+## 3) Decision model
+
+The score is built on **evidence weight**, not on "does a category exist":
+
+```
+CLEAN       :   0 – 24
+SUSPICIOUS  :  25 – 44
+MALICIOUS   :  45 – 100   (always with at least one STRONG EVIDENCE item)
+```
+
+- **Ordinary APIs earn no points.** About 180 APIs such as `Sleep`, `CreateFile`,
+  `LoadLibrary`, `InternetOpen` and `RegSetValueEx` are listed for information only — every
+  Windows binary contains them. (The old engine called a signed Chrome installer 75/100
+  MALICIOUS because of this; today it is 0.)
+- **No MALICIOUS verdict without strong evidence.** The score is clamped at 44 and the
+  report states *"capped at SUSPICIOUS because no strong evidence was found"*.
+- **Decisive strong evidence:** a single ≥30-point strong item, or two separate strong
+  items, makes the verdict MALICIOUS directly.
+- **Evidence accumulation:** 4+ independent evidence groups (API, text, decode, integrity,
+  structure, IOC, family, **hunting**) combined with ≥55 raw points promotes the file to
+  MALICIOUS.
+- **v4 hunting evidence** is added as its own group: the 10 strongest hunting findings are
+  scored, category caps apply, and only high-signal categories (injection, ransomware,
+  credential, C2, persistence, defence evasion) can produce **strong evidence**.
+- **A signature never erases evidence:** a tampered signature ⇒ MALICIOUS; a signed file
+  that injects into another process stays suspicious/malicious.
+- **v5 atlas evidence** joins the same pool but is deliberately conservative: see §4.2.
+
+### 3.1 Trust layer and contradiction resolution (v4-security)
+
+The rule engine asks "what is in the file"; the trust layer asks **"what is this string
+doing here?"** The same string can be three different things:
+
+```
+powershell -w hidden -enc SQBFAFgA      → an executed command (evidence)
+$a = "powershell -w hidden -enc" ascii  → a YARA string (rule text)
+`powershell -w hidden -enc`             → a documentation example (quote)
+```
+
+The layer runs in 9 stages and **sits above the rule engine as the decision authority**:
+
+| # | Stage | Job |
+|---|---|---|
+| 1 | `FileFingerprint` | Bytes/entropy/printability/code ratio, line counts, decode layers, technique density |
+| 2 | `HazardCatalog` | 1,096 hazardous strings split into 12 families (ransomware, injection, credential, C2, persistence, evasion…) |
+| 3 | `SelfReferenceGuard` | Is this file KineticSandbox itself / a copy of it? (16 markers, confidence ratio) |
+| 4 | `ContextClassifier` | Context: executable payload / script / source code / rule set / documentation / test / dataset |
+| 5 | `HazardContextAnalyzer` | Counts each string as **exec** or **catalog** context; `exec_ratio`, `catalog_ratio` |
+| 6 | `ContradictionResolver` | 136 contradiction records: when evidence A and B are both true, a policy applies (`a_wins`, `b_wins`, `cap_suspicious`, `cap_clean`, `merge`, `require_strong`) |
+| 7 | `TrustScorer` | 0–100 confidence: signature, known publisher, safe directory, context, self-reference, framework baseline, tampered signature (−), masquerade (−) |
+| 8 | `VerdictArbiter` | Final verdict: whitelist → test data → self-reference → detector corpus → documentation → test directory → unresolved contradiction → absence of execution context |
+| 9 | `TrustPolicyStore` / `TrustEngine` | User policy (hash/path/name/publisher) and orchestration |
+
+**Ground rule:** a demotion never rests on a single weak indicator. Reaching CLEAN requires
+the file to be our own source, to sit in a rule/source-code context (high catalog ratio +
+low execution ratio + no real payload), to be test data, or to be whitelisted in policy. A
+real injection/driver/ransomware chain is **never** suppressed, in any profile.
+
+When a demotion happens:
+
+- the verdict and score drop (`verdict_downgraded` appears in the JSON),
+- the reason is appended to the report as an **informational** (0-point) evidence line,
+- the contradiction count and unresolved contradictions are reported,
+- a `trust_layer` block is written to the JSON (profile, context, trust score, winning verdict).
+
+```json
+"verdict_downgraded": {"from": "malicious", "from_score": 100,
+                       "to": "clean", "to_score": 0, "reason": "self_reference"}
+```
+
+**Trust profiles** (`--trust-profile`):
+
+| Profile | Behaviour |
+|---|---|
+| `auto` | Decides context itself, corpus demotion enabled (default) |
+| `triage` | Sample triage: **no demotion at all**, self-recognition disabled |
+| `source` | Writing source code / rules: corpus demotion on, contradiction resolution on |
+| `forensics` | Forensic review: no demotion, but contradictions and the evidence ledger are reported |
+
+### 3.2 Score display
+
+Raw evidence points can exceed 1000 on large samples (553 on a self-scan). That does not
+mean "1000 = very bad"; it means many indicators were found. Therefore:
+
+- `evidence_points` **caps the raw score at 200** (`evidence_points_capped` flag),
+- the report's **EVIDENCE BREAKDOWN** table shows the raw score group by group (API, text,
+  decode, integrity, structure, IOC, family, hunting) as percentages,
+- the verdict band is always on a 0–100 scale.
+
+---
+
+## 4) Detection modules
+
+### 4.1 v4 — threat hunting (11 modules, 166 rules)
+
+| Module | What it catches |
+|---|---|
+| **Rule engine** | 166 YARA-like rules: required string + additional-string threshold, category point caps, strong-evidence flag, ATT&CK label |
+| **Persistence hunter** | 39 locations: Run/RunOnce/Policies, Winlogon, AppInit_DLLs, IFEO, COM/CLSID, LSA packages, BootExecute, services, scheduled tasks, WMI subscriptions, cron/`@reboot`, systemd, `ld.so.preload`, LaunchAgent/Daemon, `authorized_keys`, `rc.local`, XDG autostart |
+| **Credential hunter** | 39 targets: LSASS, SAM, NTDS.dit, browser passwords/cookies/Autofill/Local State, wallets (wallet.dat, Exodus, MetaMask…), Telegram `tdata`, Discord/Steam sessions, KeePass/1Password/Bitwarden, SSH/AWS/Azure/Kubernetes/Docker keys, DPAPI, keylogger APIs, clipboard, cloud metadata (`169.254.169.254`) |
+| **LOLBAS chains** | 60+ binary/switch combinations (certutil, bitsadmin, mshta, regsvr32 `scrobj.dll`, rundll32 `javascript:`, installutil, msiexec, wmic, forfiles, pcalua…) plus a **download → execute → persist → hide** chain graph |
+| **Defence evasion** | AMSI/ETW patching, Defender exclusions & service disabling, firewall, event-log clearing, PowerShell logging teardown, UAC-bypass binaries, VM/sandbox and analysis-tool artifacts, anti-debug APIs |
+| **Injection analysis** | 11 API clusters (classic remote thread, APC, hollowing, thread hijack, section mapping, doppelgänging, callback, self-injection…) — checked in both the import table and the text; multiple techniques = extra bonus |
+| **Ransomware** | Shadow-copy deletion, recovery disabling, ransom-note wording/filenames, extension rewriting, encrypt-in-loop, backup service stopping, disk wiping; 3+ signals = chain |
+| **C2 / exfiltration** | Telegram Bot API, Discord webhooks, paste sites, dynamic DNS, Tor, RMM tools (AnyDesk, ScreenConnect…), tunnels (ngrok, cloudflared, chisel), SMTP/FTP/cloud exfil, C2 panel paths, raw TCP sockets |
+| **Packer detection** | UPX/ASPack/MPRESS/Themida/VMProtect/PECompact/Enigma + .NET (ConfuserEx, SmartAssembly), PyInstaller/Nuitka/Go/Rust/AutoIt markers, section entropy, few imports + high entropy, TLS callbacks |
+| **Obfuscation measurement** | base64 decoding, dynamic execution, char-code, string concatenation, compression, escape sequences, reversed/split strings and multi-layer decode count |
+| **Triage** | Kill-chain stage coverage (recon → delivery → execution → persistence → evasion → credential → collection → c2 → impact), strongest findings, category distribution, ATT&CK techniques |
+
+### 4.2 v5 — technique atlas (12th hunting module, 1,429 techniques)
+
+The 166 rules catch "high-signal behaviour"; the **atlas** scans a broad technique catalog
+at *artifact level*. Every technique carries a **trigger** (string, command, API or key) and
+belongs to one of 21 families:
+
+| Category | Families | Coverage |
+|---|---|---|
+| persistence | `persistence_registry`, `persistence_path`, `persistence_schtask`, `persistence_service`, `linux_persistence`, `macos_persistence` | Run/Winlogon/IFEO, services, tasks, cron/systemd, LaunchAgent/Daemon |
+| credential | `credential_artifact` | LSASS/SAM/NTDS, browser databases, wallets, SSH/cloud keys, DPAPI |
+| execution | `execution_lolbin`, `office_macro` | LOLBAS binaries, Office macro/VBA layers |
+| defence evasion | `evasion_artifact` | AMSI/ETW, Defender exclusions, log clearing, VM/analysis artifacts |
+| injection | `injection_api` | 11 API clusters and text patterns |
+| C2 | `c2_tool`, `network_artifact` | RMM, tunnels, webhooks, paste sites, Tor, raw sockets |
+| discovery/collection | `discovery_command`, `collection_artifact` | `whoami`/`net`/`systeminfo`, archiving, clipboard, screenshots |
+| impact | `impact_artifact` | Shadow copies, backup deletion, ransom notes, disk wiping |
+| driver/firmware | `driver_byovd`, `firmware_artifact` | BYOVD drivers, boot/UEFI commands |
+| cloud/container | `cloud_api`, `container_k8s` | IMDS, `aws`/`gcloud`/`az`, `docker`/`kubectl`/`privileged` |
+| browser | `browser_artifact` | Cookie/session/extension theft paths |
+
+**False-positive protection (the most critical part of this release):**
+
+1. **A single artifact never scores.** A family is not scored until it sees at least **2**
+   distinct artifact matches (or a curated strong combination); a lone match is shown in the
+   report only.
+2. **Category caps** (e.g. discovery 12, persistence 34) — families sharing a category cannot
+   exceed the cap together.
+3. **PE context:** inside a PE an API name is behavioural evidence only when it appears in
+   the **import table**; appearing in the string table earns nothing (otherwise PyInstaller
+   launchers were inflated by the `isdebuggerpresent` string). Such families are additionally
+   capped at 6 points in binary context.
+4. **Legitimate management-script scale-down:** when only persistence/discovery/collection
+   families match (a typical installer or backup script), the total contribution is scaled to
+   12 points. Credential, impact, C2, injection, driver or evasion evidence disables the
+   scale-down.
+5. **110 curated combinations** outweigh individual matches (e.g. `certutil -urlcache` +
+   `bitsadmin /transfer` + `rundll32 javascript:`).
+
+**Chain graph (`TechniqueGraph`):** matched families are placed on the 9-stage kill chain
+(recon → delivery → execution → persistence → evasion → credential → collection → c2 →
+impact); edges are built from ordered matches. Coverage of 3/5/7 stages grants a **4/9/12
+point** chain bonus. A single-stage file gets no bonus — so a text document that mentions
+everything cannot produce a high score.
+
+**Contradiction catalog 62 → 136.** The 74 new records fall into two groups: 43
+atlas/graph/telemetry contradictions (`atlas:*`, `graph:*`, `telemetry:*`) and 31 review
+contradictions (`atlas_evasion_vs_binary_signature`, `persistence_only_script`,
+`atlas_impact_vs_installer_repair`, `score_inflation_multi_module`, `self_scan_graph_noise`…).
+The resolver now **aggregates prefix tokens** (`atlas:`, `reason:`, `hunt_rule:`) per family,
+so it never depends on a single literal reason id.
+
+### 4.3 v4-security — trust and contradiction layer
+
+| Component | What it does |
+|---|---|
+| **`FileFingerprint`** | Measurable fingerprint: bytes, entropy, printable ratio, code/line ratio, language guess, PE body, script markers, decode layers, technique density |
+| **`HazardCatalog`** | 1,096 hazardous strings in 12 families; checks whether each family is actually *used* |
+| **`SelfReferenceGuard`** | 16 markers answer "is this file KineticSandbox itself?" (copies, renamed files, version drift) |
+| **`ContextClassifier`** | Payload / script / source code / rule set / security tool / documentation / test / dataset / container classes + confidence |
+| **`HazardContextAnalyzer`** | Counts each string as **exec** or **catalog** context; line-level classification (`$a = "..."`, YAML lists, inline backticks, assignment lines) |
+| **`ContradictionResolver`** | 136 records; each carries a resolution policy and a severity; unresolved ones are reported as `unresolved` |
+| **`TrustScorer`** | 18 weighted indicators: valid signature, known publisher, safe directory, context, self-reference, catalog context, framework baseline; negatives: tampered signature, suspicious directory, unsigned, sandbox artifacts |
+| **`VerdictArbiter`** | Verdict arbiter: attempts demotion step by step and must pass "real payload / real injection / real driver / real ransomware" checks at every step |
+| **`TrustPolicyStore`** | `~/.kineticsandbox_trust.json`: hash / path / filename / publisher whitelist, hash/path/name blacklist; written with `0600` permissions |
+| **`BenignFrameworkBaseline`** | Recognises 23 software frameworks (.NET, Electron, Unity, PyInstaller, Go, Rust, Qt, JVM, CEF…): legitimate framework strings do not create false positives |
+| **`PublisherTrustInspector`** | 83 publishers (Microsoft, Sysinternals, Adobe, Google, security products, RMM tools…) + **masquerade** check: publisher name present but signature missing/tampered ⇒ masquerade suspicion |
+| **`EvidenceLedger`** | Evidence chain: every item gets an `E01…` id with its source (rule engine, hunting, catalog, context, trust) and weight |
+| **`TrustAuditTrail`** | Hash-chained JSONL decision log (`~/.kineticsandbox_audit.jsonl`); tampering breaks the chain; enabled with `--audit-log` |
+| **`TrustPolicyRules`** | Policy validation/normalisation/deduplication; a broken policy is reported, never silently swallowed |
+| **`TrustCalibrator`** | Demotion statistics and calibration suggestions from the audit trail |
+| **`SignatureHealth`** | Health of its own tables: rule ids, rule shape, contradiction records, profile fields, i18n parity, family/ATT&CK tables, catalog, framework/publisher tables |
+| **`TrustBenchmark`** | 5 synthetic scenarios exercise context/execution separation without touching the filesystem (SETTINGS → **SELF-TEST**) |
+| **`EscalationAdvisor`** | Verdict-driven action advice (urgent / high / medium / info) plus contradiction notes such as "high trust but malicious verdict" |
+| **`ScoreBreakdown` / `RationaleExplainer`** | Group-level distribution of the raw score and the verdict translated into plain language (TR+EN) |
+
+### 4.4 v3 base layers
+
+| Module | What it does |
+|---|---|
+| **Decode engine** | Base64 / Base64URL / line-wrapped / missing padding / nested, PowerShell `-EncodedCommand`, hex (5 notations), `[char]`, `fromCharCode`, `Chr()` chains, split-string concatenation, line continuations, URL `%XX`, ROT13/reverse, GZip/ZLib/Deflate, XOR guessing |
+| **Authenticode** | Compares the digest in the certificate table with the digest computed from the file; catches tampering **and data appended after the certificate table** |
+| **Driver / BYOVD** | `NtLoadDriver`, `SeLoadDriverPrivilege`, `SERVICE_KERNEL_DRIVER`, `.sys` paths, known vulnerable driver names, physical memory access |
+| **Family signature DB** | 31 families (Cobalt Strike, Meterpreter, njRAT, RedLine, AgentTesla, Emotet, QakBot, LockBit, WannaCry, Mimikatz, XMRig…). *Anchor + context* model: mentioning a family name is not enough |
+| **ATT&CK mapping** | 152 techniques; every match comes with its evidence |
+| **Shellcode heuristics** | PEB access, API hashing, GetPC, syscall density; in PEs only the overlay |
+| **Container opener** | Opens ZIP/GZip **in memory**; classifies child PE/scripts; recognises NSIS/Inno/PyInstaller/.NET/AutoIt frameworks |
+| **Embedded PE** | PE carving and detection of PE/drivers inside resources |
+| **XOR hunt** | 4 × 128 KB windows, 255 keys; hidden driver/credential strings |
+| **Reputation DB** | Local hash black/whitelist (`~/.kineticsandbox_iocs.json`) |
+| **VirusTotal** | Optional, off by default; only the SHA-256 is sent |
+| **File operations** | Files read / written / deleted / executed + notable targets |
+
+### False-positive protections
+
+- 14–15 real system binaries and a signed Microsoft sample stay **CLEAN**.
+- **Its own source is CLEAN:** scanning `kinetic_sandbox.py` returns CLEAN 0 (self-reference).
+- **Rule/documentation corpus is CLEAN:** YARA, Sigma and ransomware research notes are
+  clean; real loader/ransomware scripts stay MALICIOUS.
+- **Legitimate installers are CLEAN:** `curl … | bash` from official distribution hosts,
+  `systemctl enable`, `msiexec /i`, backups (`pg_dump | gzip`) and API clients.
+- Signed + known publisher + no strong evidence ⇒ CLEAN.
+- The `\Registry\…\Services` string alone is **not** driver evidence (installers read it).
+- An unsigned "Microsoft Corporation" claim is not MALICIOUS on its own (SUSPICIOUS).
+- **Download-context trust:** downloads from official distribution hosts (NodeSource,
+  rustup, Docker, Homebrew, PyPI, Chocolatey, npm, Google/Microsoft update) or internal
+  addresses neutralise download/execution **and persistence** evidence — a Node.js/Docker
+  install via `curl … | bash` stays CLEAN. The triage score is scaled by the same factor.
+- **v4 rule engine:** a single weak indicator earns nothing (0.6 factor), every category is
+  capped, and even a "strong"-flagged rule is not strong evidence without enough matches.
+- **v4 injection:** one API is not enough; the whole cluster is required (e.g.
+  `VirtualAllocEx` + `WriteProcessMemory` + `CreateRemoteThread`).
+- Family anchors shorter than 10 characters require word boundaries (no accidental matches
+  inside random base64 noise).
+- **v5 atlas:** minimum 2 matches per family, category caps, the PE import gate, the
+  management-script scale-down and single-artifact non-scoring (see §4.2).
+
+---
+
+## 5) Configuration and data files
+
+| Path | Contents |
+|---|---|
+| `~/.kineticsandbox.json` | Language, VirusTotal key/on-off, **disabled hunting modules** (`hunt_disabled`), version |
+| `~/.kineticsandbox_iocs.json` | Local reputation DB — hash black/whitelist. Falls back to the `iocs.example.json` template, which the GUI can create with one click |
+| `iocs.example.json` | Template + DragonBurn example (VT 52/71) |
+| `~/.kineticsandbox_trust.json` | **Trust policy**: profile + hash/path/name/publisher whitelist, hash/path/name blacklist (`0600`) |
+| `~/.kineticsandbox_audit.jsonl` | **Audit trail** (optional): hash-chained verdict records, rotated at 512 KB |
+
+Example `~/.kineticsandbox.json`:
+
+```json
+{
+  "language": "tr",
+  "vt_api_key": "",
+  "vt_enabled": false,
+  "hunt_disabled": ["c2", "packer"],
+  "trust_profile": "auto",
+  "trust_policy": "/home/user/.kineticsandbox_trust.json",
+  "version": "5"
+}
+```
+
+The VirusTotal lookup sends **only the hash**, never uploads the file, and is off by default
+(`vt_api_key` + `vt_enabled`). The **EXPORT SETTINGS** button masks the key as `***`.
+
+---
+
+## 6) Limits (the honest ones)
+
+- **Static only:** the sample is not executed, no URL is contacted, no DNS query is made.
+- **Certificate chains are not validated:** only the Authenticode *digest* is compared
+  (chain/trust-store validation is the operating system's job). A validly signed malware
+  looks "signed"; behaviour decides the verdict.
+- **Container support is ZIP + GZip.** RAR, 7-Zip, CAB, MSI/OLE and NSIS bodies are
+  *recognised and reported*, not extracted.
+- **Family matching is text-based:** packed samples without anchors will not match; ATT&CK
+  evidence, hunting rules and structural rules fill that gap.
+- **Hunting modules are text/import based:** they cannot see strings built dynamically in
+  memory; on a single fully encrypted layer only entropy/packer indicators remain.
+- **The XOR hunt is bounded** (4 windows) and the shellcode heuristic inspects only the
+  overlay in PEs.
+- **Disabling a module in SETTINGS** affects only that session's analysis; a disabled module
+  is listed in the report's "EXCLUDED MODULES" line.
+- **The atlas is an artifact catalog, not a crystal ball:** it scores families, not intent.
+  A file can legitimately contain two persistence strings (see the management-script
+  scale-down), and a novel sample can hide behind artifacts nobody has catalogued yet.
+- **The trust layer is a *context* layer, not magic:** a rule-like malware that really
+  stores its text in executable form (exec context) is not demoted; a file that looks
+  entirely like a catalog could theoretically slip through. When in doubt use the `triage`
+  profile — it never demotes.
+- **The audit trail is local** (`~/.kineticsandbox_audit.jsonl`, off by default) and only
+  provides *tamper detection*; it does not ship decisions to a remote log server.
+- **This is a heuristic tool, not an authority.** Signed malware, new obfuscation and
+  fileless techniques can always evade it. Use an isolated VM for in-depth review.
+
+---
+
+## 7) Tests
+
+```bash
+python test_kinetic_sandbox.py              # 621 checks, ~40 s
+python test_kinetic_sandbox.py --verbose    # detail for every check
+python kinetic_sandbox.py --trust-doctor    # trust-layer diagnosis
+```
+
+| Block | Checks | Coverage |
+|---|---|---|
+| A | 56 | Decode engine: every encoding, nested layers, 500 random inputs |
+| B | 38 | False positives: 15 benign files, 10 PE scenarios, real binaries |
+| C | 47 | Detection: 8 script families + 12 decisive PE behaviours, threshold/limit rules |
+| D | 37 | Authenticode digest, tampering and **appended data**, manifest, reputation, VT |
+| E | 40 | TR+EN reports, key parity, JSON output |
+| F | 22 | Limits: empty/small/large files, missing path, score range, timing |
+| G | 32 | Family DB integrity, false-match protection, ATT&CK |
+| H | 33 | Containers, shellcode, file operations |
+| I | 21 | CLI: exit codes, folder scans, JSON/report output |
+| J | 49 | Decode regressions, timing limits, calibration and the benign control set |
+| **K** | **87** | **v4: rule engine, persistence, credential, LOLBAS, defence evasion, injection, ransomware, C2, packer, obfuscation, triage, SETTINGS/DECODE, FP and performance** |
+| **L** | **97** | **v4-security: self-recognition, context/catalog separation, contradiction resolution, profiles, policy (white/blacklist), audit trail and chain verification, framework baseline, publisher/masquerade, evidence ledger, escalation, report/CLI, performance** |
+| **M** | **62** | **v5: the 1,429-technique atlas, family thresholds and category caps, curated combinations, PE import gate, chain graph and bonus, the expanded contradiction catalog, atlas report/CLI/JSON, self-scan cleanliness and performance** |
+
+If `/tmp/sigcheck.exe` (a real signed Microsoft binary) is present, 6 more checks run;
+otherwise they are skipped silently — none of them counts as "failed".
+
+**Performance (on this machine):** 447 KB signed PE ≈ 0.6 s · 3 MB script ≈ 2.4 s ·
+133 KB single-line Base64 full analysis ≈ 0.9 s (decode 0.06 s) · 3-file folder ≈ 0.2 s ·
+self-scan with the atlas active ≈ 3.8 s.
+
+---
+
+## 8) FAQ
+
+### 8.1 Trust layer (v4-security)
+
+- **"The tool used to call its own file MALICIOUS; now it says CLEAN. Can I trust that?"**
+  The trust layer looks at three independent signals: (1) `SelfReferenceGuard` verifies with
+  16 markers that the file *is* KineticSandbox, (2) `ContextClassifier` classifies the
+  context as "rule set / security tool", (3) `HazardContextAnalyzer` measures that 90%+ of
+  the hazardous strings live in *catalog* (rule table) context. If any of the three is
+  missing, no demotion happens. Moreover, if there is a real PE body / injection / driver /
+  ransomware chain, `VerdictArbiter` refuses to demote — so a real payload hidden inside our
+  own source is still caught.
+- **"Could real malware pretend to be a rule file and slip through?"** For a rule-file
+  context to reach CLEAN, execution context must be ≤ 20%, the catalog ratio ≥ 45%, and the
+  file must carry no PE/script payload. A loader line such as
+  `IEX (New-Object Net.WebClient).DownloadString(...)` is in *exec* context, so no demotion
+  happens (block L locks this in the test suite).
+- **"Which profile should I pick?"** `auto` for sample analysis. `source` when scanning a
+  rule set or the tool's own source. `triage` when you never want demotion (e.g. production
+  decisions). `forensics` for forensic review (no demotion, full contradiction and evidence
+  reporting).
+
+### 8.2 Atlas (v5)
+
+- **"I scanned a signed exe and the atlas matched 5 techniques — why is it CLEAN?"**
+  Because matching is not scoring. Most of those matches never reach the 2-artifact family
+  threshold, the API families only count import-table entries inside a PE, and every
+  category has a cap. The report still shows what was seen, so you can inspect it.
+- **"Why does a research note full of ransomware commands stay CLEAN?"**
+  Context. The file is a document, the strings sit in prose, the category cap applies, and
+  the chain bonus requires real execution/persistence pairing. Chains are built from
+  families that are *scored*, not from every mention.
+- **"My file only matched the persistence family and got 12 points — is the scale-down too
+  aggressive?"** Check the family list in the report. If credential, impact, C2, injection or
+  driver evidence appears anywhere, the scale-down is switched off entirely. If you still
+  disagree, use `--trust-profile triage` and read the raw group scores.
+- **"Can I turn the atlas off?"** Yes: **SETTINGS → HUNTING MODULES** → uncheck `atlas`.
+  The verdict then rests on the other 11 modules and the report lists it under
+  "EXCLUDED MODULES".
+
+**VirusTotal says 50/70, KineticSandbox says 30 — why?**
+The two numbers measure different things: VT counts "how many engines flagged it",
+KineticSandbox measures "how strong the evidence is". If the gap is large there is a real
+miss. v4 introduced the hunting layer for exactly this gap (166 rules + 12 modules + the
+1,429-technique atlas + kill-chain triage), and decode layers can now be filtered and
+exported. If you still see a gap, share the **EXPORT JSON** output; we can calibrate against
+that sample.
+
+**One of the hunting modules is noisy — can I turn it off?**
+Yes: **⚙ SETTINGS → HUNTING MODULES**, uncheck the box and press **SAVE SETTINGS**. A
+disabled module does not run, it is listed in the report as "EXCLUDED MODULES", and the
+verdict is made from the remaining evidence.
+
+**Where do I find the update log?**
+On the right side of the **⚙ SETTINGS** tab. If a `CHANGELOG.md` sits next to the app it is
+read from disk, otherwise the embedded log is shown; **REFRESH** re-reads the file.
+
+**The decode output is huge — how do I narrow it?**
+Type a word such as `url`, `ip`, `base64` or `powershell` into the DECODE filter field and
+press **FILTER** (or `Enter`). Only matching lines remain; **CLEAR FILTER** restores the old
+view and **SAVE LAYERS** writes the result to a file.
+
+**Why is a signed file reported as MALICIOUS?**
+A signature only means "this file has not changed *since it was signed*". If the content
+changed after signing (tampering or an appended payload) the signature is invalid and the
+file becomes MALICIOUS.
+
+**Can I whitelist a file?**
+Add its SHA-256 to `whitelist` in `~/.kineticsandbox_iocs.json`; the verdict becomes CLEAN (0).
+
+**The GUI will not open.**
+`pip install customtkinter` is required. On a server/SSH box use
+`python kinetic_sandbox.py --cli <file>` instead.
+
+---
+
+Changelog: [`CHANGELOG.md`](CHANGELOG.md) (English) · Türkçe README: [`README.md`](README.md)
